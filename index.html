@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="title">GARGANTUA · 卡冈图雅 — 致敬《星际穿越》</title>
+  <meta name="description" data-i18n-content="desc" content="用 WebGL 光线步进与史瓦西测地线，在浏览器中呈现受《星际穿越》启发的超大质量黑洞「卡冈图雅」。">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <canvas id="gl" data-i18n-aria="canvas" aria-label="卡冈图雅黑洞实时渲染"></canvas>
+
+  <div id="nogl">
+    <div>
+      <p class="nogl-title" data-i18n="noglTitle">需要 WebGL2 支持</p>
+      <p class="nogl-text" data-i18n="noglText">你的浏览器无法运行此渲染。请使用最新版 Chrome、Edge 或 Firefox 打开。</p>
+    </div>
+  </div>
+
+  <!-- 开场黑幕 -->
+  <div id="veil" aria-hidden="true"></div>
+
+  <!-- 左上：标题 -->
+  <header class="hud hud-tl rise" style="--d:.3s">
+    <h1>GARGANTUA</h1>
+    <p class="sub" data-i18n="sub">卡冈图雅 · 超大质量黑洞</p>
+    <p class="tag" data-i18n="tag">《星际穿越》· 实时光线追踪致敬</p>
+  </header>
+
+  <!-- 右上：控制 -->
+  <nav class="hud hud-tr rise" style="--d:.5s" data-i18n-aria="controls" aria-label="渲染控制">
+    <div class="quality" role="group" data-i18n-aria="quality" aria-label="画质">
+      <button class="q-btn" data-q="low">LOW</button>
+      <button class="q-btn active" data-q="med">MED</button>
+      <button class="q-btn" data-q="high">HIGH</button>
+    </div>
+    <button id="btn-lang" class="ghost-btn" aria-label="Switch language / 切换语言" title="中 / EN"><span class="lang-zh">中</span><i>/</i><span class="lang-en">EN</span></button>
+    <button id="btn-pause" class="ghost-btn" data-i18n-aria="pauseAria" aria-label="暂停渲染">暂停</button>
+  </nav>
+
+  <!-- 左下：数据面板 -->
+  <aside class="hud hud-bl rise" style="--d:.7s" data-i18n-aria="params" aria-label="黑洞参数">
+    <dl class="data">
+      <div class="row"><dt data-i18n="mass">质量 MASS</dt><dd>1.00 × 10<sup>8</sup> M☉</dd></div>
+      <div class="row"><dt data-i18n="horizon">视界半径 HORIZON</dt><dd>2.95 × 10<sup>8</sup> km</dd></div>
+      <div class="row"><dt data-i18n="isco">内缘 ISCO</dt><dd>3.0 r<sub>s</sub></dd></div>
+      <div class="row"><dt data-i18n="edge">盘外缘 DISK EDGE</dt><dd>15 r<sub>s</sub></dd></div>
+      <div class="row"><dt data-i18n="range">观测距离 RANGE</dt><dd id="ro-dist">— rs</dd></div>
+      <div class="row"><dt data-i18n="fps">帧率 FPS</dt><dd id="ro-fps">—</dd></div>
+    </dl>
+  </aside>
+
+  <!-- 右下：台词 -->
+  <blockquote class="hud hud-br rise" style="--d:.9s">
+    <p lang="zh-CN" data-i18n="quote">不要温和地走进那个良夜。</p>
+    <cite data-i18n="cite">狄兰·托马斯 ·《星际穿越》</cite>
+  </blockquote>
+
+  <!-- 底部：交互提示 -->
+  <footer class="hud hud-bc" id="hint">
+    <span data-i18n="hintDrag">拖拽 · 环视黑洞</span><i></i><span data-i18n="hintWheel">滚轮 · 接近 / 远离</span>
+  </footer>
+
+  <script src="js/shaders.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

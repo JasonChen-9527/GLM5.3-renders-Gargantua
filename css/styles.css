@@ -1,0 +1,310 @@
+/* ============================================================
+ * GARGANTUA · 卡冈图雅 — 电影感 HUD
+ * ============================================================ */
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("../fonts/SpaceGrotesk-Light.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/SpaceGrotesk-Regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/SpaceGrotesk-Medium.woff2") format("woff2");
+}
+
+:root {
+  --fg: rgba(232, 234, 238, 0.92);
+  --fg-dim: rgba(232, 234, 238, 0.55);
+  --fg-faint: rgba(232, 234, 238, 0.34);
+  --accent: #d9a05b;           /* 吸积盘暖橙 */
+  --hairline: rgba(255, 255, 255, 0.16);
+  --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+  --sans: "Space Grotesk", -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --serif: "Noto Serif SC", "Songti SC", SimSun, serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  min-height: 100dvh;
+  background: #000;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--sans);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------- 画布 ---------------- */
+#gl {
+  position: fixed;
+  inset: 0;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+#gl:active { cursor: grabbing; }
+
+/* ---------------- 开场黑幕 ---------------- */
+#veil {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+  animation: veil 2.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes veil {
+  0%   { opacity: 1; }
+  55%  { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+/* ---------------- HUD 通用 ---------------- */
+.hud {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 入场：缓慢上浮 */
+.rise {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: rise 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+@keyframes rise {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------------- 左上：标题 ---------------- */
+.hud-tl { top: clamp(20px, 4vh, 44px); left: clamp(20px, 3.5vw, 48px); }
+
+.hud-tl h1 {
+  font-weight: 300;
+  font-size: clamp(22px, 2.6vw, 36px);
+  letter-spacing: 0.42em;
+  line-height: 1;
+  color: var(--fg);
+  padding-left: 0.06em; /* 视觉平衡字距 */
+}
+
+.hud-tl .sub {
+  margin-top: 12px;
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(13px, 1.15vw, 16px);
+  letter-spacing: 0.5em;
+  color: var(--fg-dim);
+}
+
+.hud-tl .tag {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hairline);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--fg-faint);
+  width: fit-content;
+}
+
+/* ---------------- 右上：控制 ---------------- */
+.hud-tr {
+  top: clamp(20px, 4vh, 44px);
+  right: clamp(20px, 3.5vw, 48px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.quality {
+  display: flex;
+  border: 1px solid var(--hairline);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+.q-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--fg-faint);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: color 0.25s, background 0.25s;
+}
+.q-btn + .q-btn { border-left: 1px solid var(--hairline); }
+.q-btn:hover { color: var(--fg); }
+.q-btn.active {
+  color: var(--accent);
+  background: rgba(217, 160, 91, 0.10);
+}
+.q-btn:focus-visible,
+.ghost-btn:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.ghost-btn {
+  appearance: none;
+  border: 1px solid var(--hairline);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  color: var(--fg-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: color 0.25s, border-color 0.25s;
+}
+.ghost-btn:hover { color: var(--fg); border-color: rgba(255, 255, 255, 0.32); }
+
+/* 语言切换按钮：高亮当前语言 */
+#btn-lang { display: flex; align-items: center; gap: 4px; padding: 8px 12px; }
+#btn-lang i { font-style: normal; color: var(--fg-faint); }
+#btn-lang .lang-zh,
+#btn-lang .lang-en { color: var(--fg-faint); transition: color 0.25s; }
+html[lang="zh-CN"] #btn-lang .lang-zh,
+html[lang="en"] #btn-lang .lang-en { color: var(--accent); }
+
+/* ---------------- 左下：数据面板 ---------------- */
+.hud-bl {
+  bottom: clamp(20px, 4vh, 44px);
+  left: clamp(20px, 3.5vw, 48px);
+}
+
+.data {
+  display: grid;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.data .row {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
+.data dt {
+  color: var(--fg-faint);
+  letter-spacing: 0.12em;
+  font-size: 9px;
+  white-space: nowrap;
+}
+.data dd {
+  color: var(--fg-dim);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.data dd sup, .data dd sub { font-size: 8px; }
+
+/* 观测距离稍亮 —— 唯一实时读数 */
+#ro-dist { color: var(--fg); }
+
+/* ---------------- 右下：台词 ---------------- */
+.hud-br {
+  bottom: clamp(20px, 4vh, 44px);
+  right: clamp(20px, 3.5vw, 48px);
+  text-align: right;
+  max-width: min(46vw, 420px);
+}
+.hud-br p {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(14px, 1.3vw, 18px);
+  letter-spacing: 0.28em;
+  color: var(--fg-dim);
+}
+.hud-br cite {
+  display: block;
+  margin-top: 10px;
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--fg-faint);
+}
+
+/* ---------------- 底部：交互提示 ---------------- */
+.hud-bc {
+  bottom: clamp(18px, 3.5vh, 36px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--fg-faint);
+  opacity: 0;
+  animation: hintIn 1.8s cubic-bezier(0.16, 1, 0.3, 1) 1.4s forwards,
+             hintOut 2.4s ease 12s forwards;
+}
+@keyframes hintIn  { to { opacity: 1; } }
+@keyframes hintOut { to { opacity: 0; } }
+
+.hud-bc i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--fg-faint);
+}
+
+/* ---------------- WebGL 不可用 ---------------- */
+#nogl {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  z-index: 100;
+  text-align: center;
+  padding: 24px;
+}
+.nogl-title {
+  font-family: var(--sans);
+  font-size: 20px;
+  letter-spacing: 0.3em;
+  margin-bottom: 12px;
+}
+.nogl-text { font-family: var(--serif); color: var(--fg-dim); line-height: 1.8; }
+
+/* ---------------- 响应式 ---------------- */
+@media (max-width: 760px) {
+  .hud-br { display: none; }          /* 小屏隐藏台词，聚焦画面 */
+  .hud-bl .row:nth-child(n+4) { display: none; }  /* 只留前 3 行数据 */
+  .hud-tl .tag { display: none; }
+  .hud-tl h1 { font-size: 20px; }
+  .hud-tr { gap: 8px; }
+  .q-btn { padding: 7px 9px; }
+}
+
+/* ---------------- 降低动态效果 ---------------- */
+@media (prefers-reduced-motion: reduce) {
+  #veil { animation-duration: 0.8s; }
+  .rise { animation-duration: 0.6s; }
+  .hud-bc { animation-delay: 0.5s, 4s; }
+}
